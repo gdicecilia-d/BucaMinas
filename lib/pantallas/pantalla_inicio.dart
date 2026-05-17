@@ -1,6 +1,7 @@
-//Menú Principal 
+// Menú Principal 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PantallaInicio extends StatefulWidget {
   const PantallaInicio({super.key});
@@ -10,23 +11,41 @@ class PantallaInicio extends StatefulWidget {
 }
 
 class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStateMixin {
-  late AnimationController _logoAnimationController;
+  AnimationController? _logoAnimationController;
+  bool _animacionesActivadas = true;
   
   @override
   void initState() {
     super.initState();
+    _cargarConfiguracion();
+  }
+  
+  Future<void> _cargarConfiguracion() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _animacionesActivadas = prefs.getBool('animaciones') ?? true;
+    });
     
-    // Animación del logo 
-    _logoAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-      reverseDuration: const Duration(milliseconds: 2000),
-    )..repeat(reverse: true);
+    // Detener animación anterior si existe
+    _logoAnimationController?.dispose();
+    _logoAnimationController = null;
+    
+    // Iniciar nueva animación solo si está activada
+    if (_animacionesActivadas) {
+      _logoAnimationController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 2000),
+        reverseDuration: const Duration(milliseconds: 2000),
+      )..repeat(reverse: true);
+    }
+    
+    // Forzar rebuild
+    if (mounted) setState(() {});
   }
   
   @override
   void dispose() {
-    _logoAnimationController.dispose();
+    _logoAnimationController?.dispose();
     super.dispose();
   }
 
@@ -48,14 +67,26 @@ class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStat
             children: [
               const SizedBox(height: 30),
               
-              // Logo con animación
-              AnimatedBuilder(
-                animation: _logoAnimationController,
-                builder: (context, child) {
-                  final scale = 0.97 + (_logoAnimationController.value * 0.06);
-                  return Transform.scale(
-                    scale: scale,
-                    child: Center(
+              // Logo con animación si está activada Y el controller existe
+              (_animacionesActivadas && _logoAnimationController != null)
+                  ? AnimatedBuilder(
+                      animation: _logoAnimationController!,
+                      builder: (context, child) {
+                        final scale = 0.97 + (_logoAnimationController!.value * 0.06);
+                        return Transform.scale(
+                          scale: scale,
+                          child: Center(
+                            child: Image.asset(
+                              'assets/imagenes/logo.png',
+                              width: screenSize.width * 0.7,
+                              height: screenSize.height * 0.4,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : Center(
                       child: Image.asset(
                         'assets/imagenes/logo.png',
                         width: screenSize.width * 0.7,
@@ -63,9 +94,6 @@ class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStat
                         fit: BoxFit.contain,
                       ),
                     ),
-                  );
-                },
-              ),
               
               const SizedBox(height: 20),
               
@@ -82,8 +110,10 @@ class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStat
                           texto: 'Jugar',
                           color: const Color(0xFFc957d2),
                           ancho: 250,
-                          onTap: () {
-                            Navigator.pushNamed(context, '/juego');
+                          onTap: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            final dificultad = prefs.getString('dificultad') ?? 'facil';
+                            Navigator.pushNamed(context, '/juego', arguments: dificultad);
                           },
                         ),
                         const SizedBox(width: 30),
@@ -91,8 +121,9 @@ class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStat
                           texto: 'Máximas\nPuntuaciones',
                           color: const Color(0xFF6ba8de),
                           ancho: 250,
-                          onTap: () {
-                            Navigator.pushNamed(context, '/marcadores');
+                          onTap: () async {
+                            await Navigator.pushNamed(context, '/marcadores');
+                            _cargarConfiguracion();
                           },
                         ),
                       ],
@@ -107,8 +138,9 @@ class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStat
                           texto: 'Configuración',
                           color: const Color(0xFFfa798a),
                           ancho: 250,
-                          onTap: () {
-                            Navigator.pushNamed(context, '/configuracion');
+                          onTap: () async {
+                            await Navigator.pushNamed(context, '/configuracion');
+                            _cargarConfiguracion();
                           },
                         ),
                         const SizedBox(width: 30),
@@ -116,8 +148,9 @@ class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStat
                           texto: 'Instrucciones',
                           color: const Color(0xFFf93cc7),
                           ancho: 250,
-                          onTap: () {
-                            Navigator.pushNamed(context, '/instrucciones');
+                          onTap: () async {
+                            await Navigator.pushNamed(context, '/instrucciones');
+                            _cargarConfiguracion();
                           },
                         ),
                       ],
@@ -130,8 +163,9 @@ class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStat
         ),
       ),
       floatingActionButton: _BotonCreditosNeon(
-        onTap: () {
-          Navigator.pushNamed(context, '/creditos');
+        onTap: () async {
+          await Navigator.pushNamed(context, '/creditos');
+          _cargarConfiguracion();
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
