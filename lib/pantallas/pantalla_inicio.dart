@@ -1,4 +1,4 @@
-// Menú Principal 
+// Menú Principal
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,11 +26,9 @@ class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStat
       _animacionesActivadas = prefs.getBool('animaciones') ?? true;
     });
     
-    // Detener animación anterior si existe
     _logoAnimationController?.dispose();
     _logoAnimationController = null;
     
-    // Iniciar nueva animación solo si está activada
     if (_animacionesActivadas) {
       _logoAnimationController = AnimationController(
         vsync: this,
@@ -39,7 +37,6 @@ class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStat
       )..repeat(reverse: true);
     }
     
-    // Forzar rebuild
     if (mounted) setState(() {});
   }
   
@@ -53,7 +50,16 @@ class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStat
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     
+    final bool esMovil = screenSize.width < 600;
+    double anchoBoton = esMovil ? (screenSize.width * 0.4).clamp(130.0, 180.0) : 250;
+    double alturaBoton = esMovil ? anchoBoton * 0.45 : 100;
+    double fontSizeBoton = esMovil ? 10 : 14;
+    double espacioEntreBotones = esMovil ? 12 : 30;
+    double espacioEntreFilas = esMovil ? 15 : 25;
+    
     return Scaffold(
+      // Fondo 
+      backgroundColor: Colors.transparent,
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -62,103 +68,119 @@ class _PantallaInicioState extends State<PantallaInicio> with TickerProviderStat
           ),
         ),
         child: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(height: 30),
-              
-              // Logo con animación si está activada Y el controller existe
-              (_animacionesActivadas && _logoAnimationController != null)
-                  ? AnimatedBuilder(
-                      animation: _logoAnimationController!,
-                      builder: (context, child) {
-                        final scale = 0.97 + (_logoAnimationController!.value * 0.06);
-                        return Transform.scale(
-                          scale: scale,
-                          child: Center(
-                            child: Image.asset(
-                              'assets/imagenes/logo.png',
-                              width: screenSize.width * 0.7,
-                              height: screenSize.height * 0.4,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  : Center(
-                      child: Image.asset(
-                        'assets/imagenes/logo.png',
-                        width: screenSize.width * 0.7,
-                        height: screenSize.height * 0.4,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-              
-              const SizedBox(height: 20),
-              
-              // Botones
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    // Fila 1
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _BotonNeon(
-                          texto: 'Jugar',
-                          color: const Color(0xFFc957d2),
-                          ancho: 250,
-                          onTap: () async {
-                            final prefs = await SharedPreferences.getInstance();
-                            final dificultad = prefs.getString('dificultad') ?? 'facil';
-                            Navigator.pushNamed(context, '/juego', arguments: dificultad);
-                          },
-                        ),
-                        const SizedBox(width: 30),
-                        _BotonNeon(
-                          texto: 'Máximas\nPuntuaciones',
-                          color: const Color(0xFF6ba8de),
-                          ancho: 250,
-                          onTap: () async {
-                            await Navigator.pushNamed(context, '/marcadores');
-                            _cargarConfiguracion();
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 25),
-                    
-                    // Fila 2
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _BotonNeon(
-                          texto: 'Configuración',
-                          color: const Color(0xFFfa798a),
-                          ancho: 250,
-                          onTap: () async {
-                            await Navigator.pushNamed(context, '/configuracion');
-                            _cargarConfiguracion();
-                          },
-                        ),
-                        const SizedBox(width: 30),
-                        _BotonNeon(
-                          texto: 'Instrucciones',
-                          color: const Color(0xFFf93cc7),
-                          ancho: 250,
-                          onTap: () async {
-                            await Navigator.pushNamed(context, '/instrucciones');
-                            _cargarConfiguracion();
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Container(
+              // asegura que el contenido tenga al menos el alto de la pantalla
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
               ),
-            ],
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 30),
+                  
+                  // Logo
+                  (_animacionesActivadas && _logoAnimationController != null)
+                      ? AnimatedBuilder(
+                          animation: _logoAnimationController!,
+                          builder: (context, child) {
+                            final scale = 0.97 + (_logoAnimationController!.value * 0.06);
+                            return Transform.scale(
+                              scale: scale,
+                              child: Center(
+                                child: Image.asset(
+                                  'assets/imagenes/logo.png',
+                                  width: screenSize.width * 0.7,
+                                  height: screenSize.height * 0.4,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : Center(
+                          child: Image.asset(
+                            'assets/imagenes/logo.png',
+                            width: screenSize.width * 0.7,
+                            height: screenSize.height * 0.4,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Botones
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _BotonNeon(
+                              texto: 'Jugar',
+                              color: const Color(0xFFc957d2),
+                              ancho: anchoBoton,
+                              altura: alturaBoton,
+                              fontSize: fontSizeBoton,
+                              onTap: () async {
+                                final prefs = await SharedPreferences.getInstance();
+                                final dificultad = prefs.getString('dificultad') ?? 'facil';
+                                Navigator.pushNamed(context, '/juego', arguments: dificultad);
+                              },
+                            ),
+                            SizedBox(width: espacioEntreBotones),
+                            _BotonNeon(
+                              texto: 'Máximas\nPuntuaciones',
+                              color: const Color(0xFF6ba8de),
+                              ancho: anchoBoton,
+                              altura: alturaBoton,
+                              fontSize: fontSizeBoton,
+                              onTap: () async {
+                                await Navigator.pushNamed(context, '/marcadores');
+                                _cargarConfiguracion();
+                              },
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: espacioEntreFilas),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _BotonNeon(
+                              texto: 'Configuración',
+                              color: const Color(0xFFfa798a),
+                              ancho: anchoBoton,
+                              altura: alturaBoton,
+                              fontSize: fontSizeBoton,
+                              onTap: () async {
+                                await Navigator.pushNamed(context, '/configuracion');
+                                _cargarConfiguracion();
+                              },
+                            ),
+                            SizedBox(width: espacioEntreBotones),
+                            _BotonNeon(
+                              texto: 'Instrucciones',
+                              color: const Color(0xFFf93cc7),
+                              ancho: anchoBoton,
+                              altura: alturaBoton,
+                              fontSize: fontSizeBoton,
+                              onTap: () async {
+                                await Navigator.pushNamed(context, '/instrucciones');
+                                _cargarConfiguracion();
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -178,12 +200,16 @@ class _BotonNeon extends StatefulWidget {
   final String texto;
   final Color color;
   final double ancho;
+  final double altura;
+  final double fontSize;
   final VoidCallback onTap;
 
   const _BotonNeon({
     required this.texto,
     required this.color,
     required this.ancho,
+    required this.altura,
+    required this.fontSize,
     required this.onTap,
   });
 
@@ -205,10 +231,10 @@ class _BotonNeonState extends State<_BotonNeon> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: widget.ancho,
-          height: 100,
+          height: widget.altura,
           decoration: BoxDecoration(
             color: Colors.black.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(25),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: widget.color,
               width: _hover ? 3 : 2,
@@ -225,10 +251,10 @@ class _BotonNeonState extends State<_BotonNeon> {
               widget.texto,
               textAlign: TextAlign.center,
               style: GoogleFonts.pressStart2p(
-                fontSize: 14,
+                fontSize: widget.fontSize,
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                height: 1.4,
+                height: 1.3,
               ),
             ),
           ),
@@ -253,6 +279,11 @@ class _BotonCreditosNeonState extends State<_BotonCreditosNeon> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final bool esMovil = screenSize.width < 600;
+    double tamanioCredito = esMovil ? 50 : 65;
+    double iconoSize = esMovil ? 26 : 32;
+    
     return MouseRegion(
       cursor: SystemMouseCursors.click,  
       onEnter: (_) => setState(() => _hover = true),
@@ -261,8 +292,8 @@ class _BotonCreditosNeonState extends State<_BotonCreditosNeon> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          width: 65,
-          height: 65,
+          width: tamanioCredito,
+          height: tamanioCredito,
           decoration: BoxDecoration(
             color: Colors.black.withOpacity(0.8),
             shape: BoxShape.circle,
@@ -277,11 +308,11 @@ class _BotonCreditosNeonState extends State<_BotonCreditosNeon> {
               ),
             ],
           ),
-          child: const Center(
+          child: Center(
             child: Icon(
               Icons.people,
               color: Colors.white,
-              size: 32,
+              size: iconoSize,
             ),
           ),
         ),

@@ -1,4 +1,4 @@
-// Opciones de dificultad y temas
+// Opciones de dificultad, temas, sonido y animación  
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -132,6 +132,47 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    final orientation = MediaQuery.of(context).orientation;
+    final bool esHorizontal = orientation == Orientation.landscape;
+    final bool esMovil = screenSize.width < 600;
+    
+    // Ajustes según orientación y tamaño
+    double anchoCuadro;
+    double paddingCuadro;
+    double tituloSize;
+    double fontSizeSeccion;
+    double fontSizeOpcion;
+    double fontSizeSwitch;
+    double volverSize;
+    
+    if (esHorizontal && esMovil) {
+      // Horizontal en cell
+      anchoCuadro = screenSize.width * 0.9;
+      paddingCuadro = 15;
+      tituloSize = 18;
+      fontSizeSeccion = 10;
+      fontSizeOpcion = 11;
+      fontSizeSwitch = 12;
+      volverSize = 40;
+    } else if (esMovil) {
+      // Vertical en cell
+      anchoCuadro = screenSize.width * 0.9;
+      paddingCuadro = 20;
+      tituloSize = 20;
+      fontSizeSeccion = 12;
+      fontSizeOpcion = 13;
+      fontSizeSwitch = 14;
+      volverSize = 45;
+    } else {
+      // PC / Tablet
+      anchoCuadro = screenSize.width * 0.85;
+      paddingCuadro = 25;
+      tituloSize = 24;
+      fontSizeSeccion = 14;
+      fontSizeOpcion = 15;
+      fontSizeSwitch = 15;
+      volverSize = 50;
+    }
     
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -148,17 +189,18 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
               top: 20,
               left: 20,
               child: _BotonVolver(
+                size: volverSize,
                 onTap: () => Navigator.pop(context),
               ),
             ),
             
             Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(15),
                 child: Container(
-                  width: screenSize.width * 0.85,
-                  constraints: const BoxConstraints(maxWidth: 500),
-                  padding: const EdgeInsets.all(25),
+                  width: anchoCuadro,
+                  constraints: const BoxConstraints(maxWidth: 500, minWidth: 280),
+                  padding: EdgeInsets.all(paddingCuadro),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.85),
                     borderRadius: BorderRadius.circular(20),
@@ -179,25 +221,26 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
                       Text(
                         'CONFIGURACIÓN',
                         style: GoogleFonts.silkscreen(
-                          fontSize: 24,
+                          fontSize: tituloSize,
                           fontWeight: FontWeight.bold,
                           color: const Color(0xFFfa798a),
                         ),
                       ),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 20),
                       
                       // Dificultad 
                       _buildSeccion(
                         titulo: 'DIFICULTAD',
                         colorTitulo: const Color(0xFF6ba8de),
+                        fontSize: fontSizeSeccion,
                         child: Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
+                          spacing: 8,
+                          runSpacing: 8,
                           alignment: WrapAlignment.center,
                           children: [
-                            _buildOpcion('FÁCIL', _dificultad == 'facil', const Color(0xFF6ba8de), () => setState(() => _dificultad = 'facil')),
-                            _buildOpcion('MEDIO', _dificultad == 'medio', const Color(0xFFfa798a), () => setState(() => _dificultad = 'medio')),
-                            _buildOpcion('DIFÍCIL', _dificultad == 'dificil', const Color(0xFFc957d2), () => setState(() => _dificultad = 'dificil')),
+                            _buildOpcion('FÁCIL', _dificultad == 'facil', const Color(0xFF6ba8de), fontSizeOpcion, () => setState(() => _dificultad = 'facil')),
+                            _buildOpcion('MEDIO', _dificultad == 'medio', const Color(0xFFfa798a), fontSizeOpcion, () => setState(() => _dificultad = 'medio')),
+                            _buildOpcion('DIFÍCIL', _dificultad == 'dificil', const Color(0xFFc957d2), fontSizeOpcion, () => setState(() => _dificultad = 'dificil')),
                           ],
                         ),
                       ),
@@ -206,14 +249,15 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
                       _buildSeccion(
                         titulo: 'TEMA',
                         colorTitulo: const Color(0xFFfdc445),
+                        fontSize: fontSizeSeccion,
                         child: Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
+                          spacing: 8,
+                          runSpacing: 8,
                           alignment: WrapAlignment.center,
                           children: [
-                            _buildOpcion('CLARO', _tema == 'claro', const Color(0xFFfdc445), () => setState(() => _tema = 'claro')),
-                            _buildOpcion('OSCURO', _tema == 'oscuro', const Color(0xFFc957d2), () => setState(() => _tema = 'oscuro')),
-                            _buildOpcion('AUTO', _tema == 'auto', const Color(0xFF6ba8de), () => setState(() => _tema = 'auto')),
+                            _buildOpcion('CLARO', _tema == 'claro', const Color(0xFFfdc445), fontSizeOpcion, () => setState(() => _tema = 'claro')),
+                            _buildOpcion('OSCURO', _tema == 'oscuro', const Color(0xFFc957d2), fontSizeOpcion, () => setState(() => _tema = 'oscuro')),
+                            _buildOpcion('AUTO', _tema == 'auto', const Color(0xFF6ba8de), fontSizeOpcion, () => setState(() => _tema = 'auto')),
                           ],
                         ),
                       ),
@@ -222,15 +266,16 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
                       _buildSeccion(
                         titulo: 'ESTILO DE NÚMEROS',
                         colorTitulo: const Color(0xFFc957d2),
+                        fontSize: fontSizeSeccion,
                         child: Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
+                          spacing: 8,
+                          runSpacing: 8,
                           alignment: WrapAlignment.center,
                           children: [
-                            _buildOpcion('CLÁSICO', _estiloNumeros == 'clasico', const Color(0xFF6ba8de), () => setState(() => _estiloNumeros = 'clasico')),
-                            _buildOpcion('COLORIDO', _estiloNumeros == 'colorido', const Color(0xFFfa798a), () => setState(() => _estiloNumeros = 'colorido')),
-                            _buildOpcion('RETRO', _estiloNumeros == 'retro', const Color(0xFFfdc445), () => setState(() => _estiloNumeros = 'retro')),
-                            _buildOpcion('MINIMALISTA', _estiloNumeros == 'minimalista', const Color(0xFFc957d2), () => setState(() => _estiloNumeros = 'minimalista')),
+                            _buildOpcion('CLÁSICO', _estiloNumeros == 'clasico', const Color(0xFF6ba8de), fontSizeOpcion, () => setState(() => _estiloNumeros = 'clasico')),
+                            _buildOpcion('COLORIDO', _estiloNumeros == 'colorido', const Color(0xFFfa798a), fontSizeOpcion, () => setState(() => _estiloNumeros = 'colorido')),
+                            _buildOpcion('RETRO', _estiloNumeros == 'retro', const Color(0xFFfdc445), fontSizeOpcion, () => setState(() => _estiloNumeros = 'retro')),
+                            _buildOpcion('MINIMALISTA', _estiloNumeros == 'minimalista', const Color(0xFFc957d2), fontSizeOpcion, () => setState(() => _estiloNumeros = 'minimalista')),
                           ],
                         ),
                       ),
@@ -239,23 +284,26 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
                       _buildSeccion(
                         titulo: 'EFECTOS',
                         colorTitulo: const Color(0xFFfa798a),
+                        fontSize: fontSizeSeccion,
                         child: Column(
                           children: [
                             _buildSwitch(
                               label: 'Efectos de sonido',
                               value: _sonidoActivado,
                               color: const Color(0xFFfdc445),
+                              fontSize: fontSizeSwitch,
                               onChanged: (val) {
                                 setState(() {
                                   _sonidoActivado = val;
                                 });
                               },
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 8),
                             _buildSwitch(
                               label: 'Animaciones',
                               value: _animacionesActivadas,
                               color: const Color(0xFFc957d2),
+                              fontSize: fontSizeSwitch,
                               onChanged: (val) {
                                 setState(() {
                                   _animacionesActivadas = val;
@@ -266,9 +314,9 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
                         ),
                       ),
                       
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 20),
                       
-                      _BotonGuardar(onTap: _guardarConfiguracion),
+                      _BotonGuardar(onTap: _guardarConfiguracion, size: volverSize),
                       const SizedBox(height: 10),
                     ],
                   ),
@@ -281,41 +329,41 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
     );
   }
 
-  Widget _buildSeccion({required String titulo, required Color colorTitulo, required Widget child}) {
+  Widget _buildSeccion({required String titulo, required Color colorTitulo, required double fontSize, required Widget child}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           titulo,
-          style: GoogleFonts.silkscreen(fontSize: 14, color: colorTitulo),
+          style: GoogleFonts.silkscreen(fontSize: fontSize, color: colorTitulo),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         child,
-        const Divider(color: Colors.white24, height: 25),
+        const Divider(color: Colors.white24, height: 20),
       ],
     );
   }
 
-  Widget _buildOpcion(String texto, bool seleccionado, Color color, VoidCallback onTap) {
+  Widget _buildOpcion(String texto, bool seleccionado, Color color, double fontSize, VoidCallback onTap) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: seleccionado ? color : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: color,
-              width: seleccionado ? 0 : 2,
+              width: seleccionado ? 0 : 1.5,
             ),
           ),
           child: Text(
             texto,
             style: GoogleFonts.vt323(
-              fontSize: 15,
+              fontSize: fontSize,
               color: seleccionado ? Colors.black : color,
               fontWeight: seleccionado ? FontWeight.bold : FontWeight.normal,
             ),
@@ -329,6 +377,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
     required String label,
     required bool value,
     required Color color,
+    required double fontSize,
     required ValueChanged<bool> onChanged,
   }) {
     return Row(
@@ -336,7 +385,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
       children: [
         Text(
           label,
-          style: GoogleFonts.vt323(fontSize: 15, color: Colors.white70),
+          style: GoogleFonts.vt323(fontSize: fontSize, color: Colors.white70),
         ),
         Switch(
           value: value,
@@ -345,6 +394,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
           activeTrackColor: color.withOpacity(0.5),
           inactiveThumbColor: Colors.grey,
           inactiveTrackColor: Colors.grey.withOpacity(0.3),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
       ],
     );
@@ -354,7 +404,8 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion> {
 // Botón Guardar 
 class _BotonGuardar extends StatefulWidget {
   final VoidCallback onTap;
-  const _BotonGuardar({required this.onTap});
+  final double size;
+  const _BotonGuardar({required this.onTap, required this.size});
 
   @override
   State<_BotonGuardar> createState() => _BotonGuardarState();
@@ -365,6 +416,10 @@ class _BotonGuardarState extends State<_BotonGuardar> {
 
   @override
   Widget build(BuildContext context) {
+    double anchoBoton = widget.size * 4;
+    double altoBoton = widget.size * 1;
+    double fontSize = widget.size * 0.32;
+    
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -373,11 +428,11 @@ class _BotonGuardarState extends State<_BotonGuardar> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: 200,
-          height: 50,
+          width: anchoBoton.clamp(120, 200),
+          height: altoBoton.clamp(35, 50),
           decoration: BoxDecoration(
             color: Colors.black.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(25),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: const Color(0xFFfa798a),
               width: _hover ? 2.5 : 2,
@@ -393,7 +448,7 @@ class _BotonGuardarState extends State<_BotonGuardar> {
             child: Text(
               'GUARDAR',
               style: GoogleFonts.silkscreen(
-                fontSize: 16,
+                fontSize: fontSize.clamp(10, 16),
                 color: const Color(0xFFfa798a),
               ),
             ),
@@ -404,10 +459,11 @@ class _BotonGuardarState extends State<_BotonGuardar> {
   }
 }
 
-// Botón volver
+// Botón volver 
 class _BotonVolver extends StatefulWidget {
   final VoidCallback onTap;
-  const _BotonVolver({required this.onTap});
+  final double size;
+  const _BotonVolver({required this.onTap, required this.size});
 
   @override
   State<_BotonVolver> createState() => _BotonVolverState();
@@ -418,6 +474,8 @@ class _BotonVolverState extends State<_BotonVolver> {
 
   @override
   Widget build(BuildContext context) {
+    double iconSize = widget.size * 0.55;
+    
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -426,8 +484,8 @@ class _BotonVolverState extends State<_BotonVolver> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: 50,
-          height: 50,
+          width: widget.size,
+          height: widget.size,
           decoration: BoxDecoration(
             color: Colors.black.withOpacity(0.7),
             shape: BoxShape.circle,
@@ -442,7 +500,13 @@ class _BotonVolverState extends State<_BotonVolver> {
               ),
             ],
           ),
-          child: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+          child: Center(
+            child: Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              size: iconSize,
+            ),
+          ),
         ),
       ),
     );
