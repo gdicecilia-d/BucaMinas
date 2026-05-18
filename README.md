@@ -1,17 +1,35 @@
 # buscaminas
 
-A new Flutter project.
+MinePop - Buscaminas en Flutter
+Un juego de Buscaminas moderno y adaptativo, desarrollado con Flutter.  Diseñado para funcionar en Web, con soporte para tema claro/oscuro, múltiples estilos de números y sistema de récords.
 
-## Getting Started
+🎮 Características
+•	Tablero adaptable a cualquier tamaño de pantalla
+•	Dificultades: Fácil (6x6), Medio (8x8), Difícil (10x10)
+•	Click izquierdo / Tap → Revelar casilla
+•	Click derecho / Tap largo → Poner/Quitar bandera
+•	Cronómetro que inicia con el primer clic
+•	Contador de minas restantes 
+•	Sistema de récords (Top 5 por dificultad)
+•	Estilos de números: Clásico, Colorido, Retro, Minimalista
+•	Tema: Claro / Oscuro / Automático
+•	Animaciones (opcional)
+•	Efectos de sonido (opcional)
+•	Pantalla de carga con barra de progreso animada
+•	Menú principal con botones neón estilo retro
+•	Totalmente adaptativo (PC, Tablet, Móvil)
 
-This project is a starting point for a Flutter application.
+🛠️ Tecnologías utilizadas
+•	Flutter
+•	Dart
+•	SharedPreferences
+•	Google Fonts
+•	Animate Do
+•	AudioPlayers
 
-A few resources to get you started if this is your first Flutter project:
+🚀 Instalación y ejecución
+•	Instalar dependencias: flutter pub get
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+👥 Integrantes
+Grazia Di Cecilia y Juan Coll 
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
