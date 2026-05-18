@@ -14,7 +14,6 @@ class MinesweeperController extends ChangeNotifier {
   Timer? _timer;
   int _elapsedTime = 0;
   int _flagsPlaced = 0;
-  int _correctFlags = 0;
   bool _soundEnabled = true;
 
   NumberStyle _currentNumberStyle = NumberStyle.clasico;
@@ -23,7 +22,7 @@ class MinesweeperController extends ChangeNotifier {
   List<List<CellModel>> get board => _engine.board;
   GameState get gameState => _engine.gameState;
   int get elapsedTime => _elapsedTime;
-  int get remainingMines => _engine.difficulty.mineCount - _correctFlags;
+  int get remainingMines => _engine.difficulty.mineCount - _flagsPlaced;
   int get totalMines => _engine.difficulty.mineCount;  
   GameDifficulty get difficulty => _engine.difficulty;
   NumberStyle get currentNumberStyle => _currentNumberStyle;
@@ -66,7 +65,6 @@ class MinesweeperController extends ChangeNotifier {
     _stopTimer();
     _elapsedTime = 0;
     _flagsPlaced = 0;
-    _correctFlags = 0;
     _engine.generateEmptyBoard(difficulty);
     notifyListeners();
   }
@@ -132,7 +130,6 @@ class MinesweeperController extends ChangeNotifier {
     
     if (!cell.isRevealed) {
       final wasFlagged = cell.isFlagged;
-      final tieneMina = cell.hasMine;
       
       // Si intenta poner una bandera y ya llegó al límite de minas, no permitir
       if (!wasFlagged && _flagsPlaced >= totalMines) {
@@ -147,15 +144,9 @@ class MinesweeperController extends ChangeNotifier {
       if (wasFlagged != isNowFlagged) {
         if (isNowFlagged) {
           _flagsPlaced++;
-          if (tieneMina) {
-            _correctFlags++;
-          }
           _playSound('flag.wav');
         } else {
           _flagsPlaced--;
-          if (tieneMina) {
-            _correctFlags--;
-          }
           _playSound('flag.wav');
         }
         notifyListeners();
