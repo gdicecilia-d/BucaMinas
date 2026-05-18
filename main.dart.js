@@ -7846,10 +7846,10 @@ _.a=a
 _.b=null
 _.c=b
 _.d=null
-_.r=_.f=_.e=0
-_.w=!0
-_.x=c
-_.z=_.y=null
+_.f=_.e=0
+_.r=!0
+_.w=c
+_.y=_.x=null
 _.ad$=0
 _.a9$=d
 _.am$=_.ap$=0},
@@ -38479,7 +38479,7 @@ tk(){var s=0,r=A.A(t.H),q=this
 var $async$tk=A.B(function(a,b){if(a===1)return A.x(b,r)
 for(;;)switch(s){case 0:s=2
 return A.o(q.c.rf(),$async$tk)
-case 2:q.x=b
+case 2:q.w=b
 q.S()
 return A.y(null,r)}})
 return A.z($async$tk,r)},
@@ -38489,14 +38489,14 @@ for(;;)switch(s){case 0:o=A
 s=2
 return A.o(A.hw(),$async$tr)
 case 2:p=o.fv(b.a.i(0,"sonido"))
-q.w=p!==!1
+q.r=p!==!1
 return A.y(null,r)}})
 return A.z($async$tr,r)},
 wN(a){return this.aes(a)},
 aes(a){var s=0,r=A.A(t.H),q,p=this
 var $async$wN=A.B(function(b,c){if(b===1)return A.x(c,r)
-for(;;)switch(s){case 0:if(p.x===a){s=1
-break}p.x=a
+for(;;)switch(s){case 0:if(p.w===a){s=1
+break}p.w=a
 p.S()
 s=3
 return A.o(p.c.o7(a),$async$wN)
@@ -38504,13 +38504,13 @@ case 3:case 1:return A.y(q,r)}})
 return A.z($async$wN,r)},
 om(a){var s=this
 s.zw()
-s.r=s.f=s.e=0
+s.f=s.e=0
 s.a.Re(a)
 s.S()},
 jC(a){return this.a3s(a)},
 a3s(a){var s=0,r=A.A(t.H),q,p=2,o=[],n=this,m,l,k
 var $async$jC=A.B(function(b,c){if(b===1){o.push(c)
-s=p}for(;;)switch(s){case 0:if(!n.w){s=1
+s=p}for(;;)switch(s){case 0:if(!n.r){s=1
 break}p=4
 m=n.b
 m=m==null?null:m.qN(new A.Cw("audios/"+a,null))
@@ -38546,31 +38546,28 @@ s=6
 return A.o(p.c.lM(m.c,p.e),$async$wt)
 case 6:n=d
 p.S()
-m=p.y
+m=p.x
 if(m!=null)m.$2(p.e,n)
 s=4
 break
 case 5:if(l===B.ie){p.zw()
 p.jC("defeat.wav")
-m=p.z
+m=p.y
 if(m!=null)m.$0()}else if(!o.d&&m.a[a][b].d)p.jC("reveal.wav")
 case 4:p.S()
 case 1:return A.y(q,r)}})
 return A.z($async$wt,r)},
-O8(a,b){var s,r,q,p,o=this,n="flag.wav",m=o.a
-if(m.b!==B.cu)return
-s=m.a[a][b]
+O8(a,b){var s,r,q,p=this,o="flag.wav",n=p.a
+if(n.b!==B.cu)return
+s=n.a[a][b]
 if(!s.d){r=s.e
-q=s.c
-if(!r&&o.f>=m.c.gvU())return
-m.aed(a,b)
-p=m.a[a][b].e
-if(r!==p){m=o.f
-if(p){o.f=m+1
-if(q)++o.r
-o.jC(n)}else{o.f=m-1
-if(q)--o.r
-o.jC(n)}o.S()}}},
+if(!r&&p.f>=n.c.gvU())return
+n.aed(a,b)
+q=n.a[a][b].e
+if(r!==q){n=p.f
+if(q){p.f=n+1
+p.jC(o)}else{p.f=n-1
+p.jC(o)}p.S()}}},
 a4R(){var s=this.d
 if(s!=null)s.aS()
 this.d=A.azu(B.ln,new A.ZX(this))},
@@ -39405,8 +39402,8 @@ case"dificil":r=B.ic
 break
 default:r=B.dk}q.d.om(r)
 s=q.d
-s.y=q.ga2l()
-s.z=q.ga2i()},
+s.x=q.ga2l()
+s.y=q.ga2i()},
 rX(){var s=0,r=A.A(t.H),q=this,p,o,n
 var $async$rX=A.B(function(a,b){if(a===1)return A.x(b,r)
 for(;;)switch(s){case 0:n=A
@@ -39508,7 +39505,7 @@ A.acE.prototype={
 $2(a,b){var s,r=null,q=A.vd("assets/imagenes/mina.png",r,28,28),p=this.a,o=p.d
 o===$&&A.a()
 s=t.p
-return A.eL(A.c([A.eL(A.c([q,B.KA,A.av(""+(o.a.c.gvU()-o.r),A.Qm().$2$color$fontSize(B.I,16),r)],s),B.G,B.N),A.bw(r,r,B.q,A.a3(102,B.I.n()>>>16&255,B.I.n()>>>8&255,B.I.n()&255),r,r,r,28,B.lA,r,r,r,1),A.av(""+p.d.e,A.Qm().$2$color$fontSize(B.I,16),r),A.bw(r,r,B.q,A.a3(102,B.I.n()>>>16&255,B.I.n()>>>8&255,B.I.n()&255),r,r,r,28,B.lA,r,r,r,1),new A.yK(new A.acD(p),r)],s),B.G,B.aY)},
+return A.eL(A.c([A.eL(A.c([q,B.KA,A.av(""+(o.a.c.gvU()-o.f),A.Qm().$2$color$fontSize(B.I,16),r)],s),B.G,B.N),A.bw(r,r,B.q,A.a3(102,B.I.n()>>>16&255,B.I.n()>>>8&255,B.I.n()&255),r,r,r,28,B.lA,r,r,r,1),A.av(""+p.d.e,A.Qm().$2$color$fontSize(B.I,16),r),A.bw(r,r,B.q,A.a3(102,B.I.n()>>>16&255,B.I.n()>>>8&255,B.I.n()&255),r,r,r,28,B.lA,r,r,r,1),new A.yK(new A.acD(p),r)],s),B.G,B.aY)},
 $S:259}
 A.acD.prototype={
 $0(){var s=this.a.d
@@ -39525,7 +39522,7 @@ q=this.b
 s=q.d
 s===$&&A.a()
 r=s.a.a[p][o]
-return new A.r1(this.a.a,r,s.x.b,q.e,new A.acz(q,p,o),new A.acA(q,p,o),new A.acB(q,p,o),null)},
+return new A.r1(this.a.a,r,s.w.b,q.e,new A.acz(q,p,o),new A.acA(q,p,o),new A.acB(q,p,o),null)},
 $S:253}
 A.acz.prototype={
 $0(){var s=this.a.d
