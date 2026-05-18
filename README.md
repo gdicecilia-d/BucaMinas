@@ -1,6 +1,6 @@
 # buscaminas
 
-MinePop - Buscaminas en Flutter
+MinePop - Buscaminas en Flutter:
 Un juego de Buscaminas moderno y adaptativo, desarrollado con Flutter.  Diseñado para funcionar en Web, con soporte para tema claro/oscuro, múltiples estilos de números y sistema de récords.
 
 🎮 Características
@@ -33,3 +33,5 @@ Un juego de Buscaminas moderno y adaptativo, desarrollado con Flutter.  Diseñad
 👥 Integrantes
 Grazia Di Cecilia y Juan Coll 
 
+🌐 Despliegue Web
+https://gdicecilia-d.github.io/BucaMinas/
