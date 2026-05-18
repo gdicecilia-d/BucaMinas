@@ -6,7 +6,7 @@ class MinesweeperEngine {
   GameState gameState = GameState.idle;
   GameDifficulty difficulty = GameDifficulty.easy;
 
-  /// Creates a two-dimensional matrix initialized to zero (empty cells).
+  // Crea una matriz bidimensional con celdas vacías
   void generateEmptyBoard(GameDifficulty difficulty) {
     this.difficulty = difficulty;
     board = List.generate(
@@ -19,9 +19,9 @@ class MinesweeperEngine {
     gameState = GameState.idle;
   }
 
-  /// Places mines randomly on the board, ensuring the first tapped cell
-  /// and its 8 adjacent neighbors are completely free of mines.
-  /// This guarantees a safe and fair start for the player.
+  // Coloca minas aleatoriamente en el tablero, asegurando que la primera celda tocada
+  // y sus 8 vecinos adyacentes estén completamente libres de minas
+  // garantizando un inicio seguro y justo para el jugador
   void initializeMines(int firstRow, int firstCol) {
     if (gameState != GameState.idle) return;
 
@@ -35,7 +35,7 @@ class MinesweeperEngine {
       final r = random.nextInt(rows);
       final c = random.nextInt(cols);
 
-      // Check if the random position is in the safe zone (first tap + 8 neighbors)
+      // Verifica si la posición aleatoria está en la zona segura 
       final isSafeZone = (r >= firstRow - 1 && r <= firstRow + 1) &&
           (c >= firstCol - 1 && c <= firstCol + 1);
 
@@ -49,8 +49,8 @@ class MinesweeperEngine {
     gameState = GameState.playing;
   }
 
-  /// Iterates over the board after mines are placed and calculates
-  /// the correct number of surrounding mines for each cell.
+  // Recorre el tablero después de colocar las minas y calcula
+  // el número correcto de minas circundantes para cada celda
   void _calculateAdjacentMines() {
     final rows = difficulty.rows;
     final cols = difficulty.cols;
@@ -78,11 +78,11 @@ class MinesweeperEngine {
     }
   }
 
-  /// Reveals a cell.
-  /// - If the cell is already revealed or flagged, it does nothing.
-  /// - If it's a mine, it changes the game state to 'lost'.
-  /// - If adjacentMines == 0, it executes a Flood Fill algorithm to
-  ///   recursively reveal all empty cells and their connected numbered borders.
+  ///Revela una celda
+  // - Si la celda ya está revelada o tiene bandera, no hace nada
+  // - Si es una mina, cambia el estado del juego a 'perdido'
+  // - Si adjacentMines == 0, ejecuta un algoritmo de Flood Fill para
+  //   revelar recursivamente todas las celdas vacías y sus bordes numerados
   void revealCell(int row, int col) {
     if (gameState == GameState.idle) {
       initializeMines(row, col);
@@ -103,8 +103,8 @@ class MinesweeperEngine {
     _checkWinCondition();
   }
 
-  /// Flood Fill algorithm (BFS approach using a queue) to efficiently reveal 
-  /// contiguous empty cells and their immediate numbered borders.
+  // Usando BFS con una cola para revelar eficientemente
+  // celdas vacías contiguas y sus bordes numerados inmediatos
   void _floodFillReveal(int startRow, int startCol) {
     final rows = difficulty.rows;
     final cols = difficulty.cols;
@@ -120,7 +120,7 @@ class MinesweeperEngine {
 
       board[r][c] = cell.copyWith(isRevealed: true);
 
-      // If the cell has 0 adjacent mines, add neighbors to the queue
+      // Si la celda tiene 0 minas adyacentes, agregar vecinos a la cola
       if (board[r][c].adjacentMines == 0) {
         for (int i = -1; i <= 1; i++) {
           for (int j = -1; j <= 1; j++) {
@@ -140,7 +140,7 @@ class MinesweeperEngine {
     }
   }
 
-  /// Toggles the flag state of a cell if it is not revealed.
+  // Cambia el estado de la bandera de una celda si no está revelada
   void toggleFlag(int row, int col) {
     if (gameState != GameState.playing) return;
 
@@ -150,6 +150,7 @@ class MinesweeperEngine {
     }
   }
 
+  // Revela todas las minas del tablero (cuando pierde)
   void _revealAllMines() {
     for (int r = 0; r < difficulty.rows; r++) {
       for (int c = 0; c < difficulty.cols; c++) {
@@ -160,6 +161,8 @@ class MinesweeperEngine {
     }
   }
 
+  // Verifica si el jugador gana la partida
+  // Gana cuando todas las celdas sin mina han sido reveladas
   void _checkWinCondition() {
     int unrevealedCells = 0;
     for (int r = 0; r < difficulty.rows; r++) {

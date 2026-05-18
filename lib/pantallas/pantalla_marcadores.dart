@@ -14,7 +14,8 @@ class PantallaMarcadores extends StatefulWidget {
 class _PantallaMarcadoresState extends State<PantallaMarcadores> {
   String _dificultadSeleccionada = 'facil';
   final MinesweeperStorage _storage = MinesweeperStorage();
-  late Future<List<HighScore>> _recordsFuture;
+  List<HighScore> _records = [];  
+  bool _isLoading = true;
 
   final Map<String, Color> _dificultadColor = {
     'facil': const Color(0xFF6ba8de),
@@ -34,9 +35,14 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
     return GameDifficulty.easy;
   }
 
-  void _cargarRecords() {
+  Future<void> _cargarRecords() async {
     setState(() {
-      _recordsFuture = _storage.getHighScores(_getDifficultyEnum());
+      _isLoading = true;
+    });
+    final records = await _storage.getHighScores(_getDifficultyEnum());
+    setState(() {
+      _records = records;
+      _isLoading = false;
     });
   }
 
@@ -123,7 +129,7 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
 
   void _confirmarBorrado() async {
     await _storage.clearAllHighScores();
-    _cargarRecords();
+    await _cargarRecords();
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -137,6 +143,14 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
         ),
       );
     }
+  }
+
+  void _cambiarDificultad(String dificultad) {
+    if (_dificultadSeleccionada == dificultad) return;
+    setState(() {
+      _dificultadSeleccionada = dificultad;
+    });
+    _cargarRecords();
   }
 
   @override
@@ -210,27 +224,20 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
                           ],
                         ),
                         const SizedBox(height: 25),
-                        FutureBuilder<List<HighScore>>(
-                          future: _recordsFuture,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Padding(
+                        _isLoading
+                            ? const Padding(
                                 padding: EdgeInsets.all(20),
                                 child: CircularProgressIndicator(color: Color(0xFF6ba8de)),
-                              );
-                            } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                              return _buildMensajeVacioPC();
-                            } else {
-                              return Column(
-                                children: [
-                                  _buildTablaRecordsPC(snapshot.data!),
-                                  const SizedBox(height: 25),
-                                  _BotonBorrarPC(onTap: _borrarRecords),
-                                ],
-                              );
-                            }
-                          },
-                        ),
+                              )
+                            : _records.isEmpty
+                                ? _buildMensajeVacioPC()
+                                : Column(
+                                    children: [
+                                      _buildTablaRecordsPC(_records),
+                                      const SizedBox(height: 25),
+                                      _BotonBorrarPC(onTap: _borrarRecords),
+                                    ],
+                                  ),
                         const SizedBox(height: 10),
                       ],
                     ),
@@ -252,7 +259,6 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
     double volverSize;
     
     if (orientation == Orientation.landscape) {
-      // Móvil horizontal
       anchoCuadro = screenSize.width * 0.7;
       paddingCuadro = 12;
       tituloSize = 14;
@@ -260,7 +266,6 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
       fontSizeTabla = 10;
       volverSize = 40;
     } else {
-      // Móvil vertical
       anchoCuadro = screenSize.width * 0.9;
       paddingCuadro = 20;
       tituloSize = 18;
@@ -333,27 +338,20 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
                         ],
                       ),
                       const SizedBox(height: 15),
-                      FutureBuilder<List<HighScore>>(
-                        future: _recordsFuture,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Padding(
+                      _isLoading
+                          ? const Padding(
                               padding: EdgeInsets.all(20),
                               child: CircularProgressIndicator(color: Color(0xFF6ba8de)),
-                            );
-                          } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                            return _buildMensajeVacioMovil(fontSizeTabla);
-                          } else {
-                            return Column(
-                              children: [
-                                _buildTablaRecordsMovil(snapshot.data!, fontSizeTabla),
-                                const SizedBox(height: 15),
-                                _BotonBorrarMovil(onTap: _borrarRecords, size: volverSize),
-                              ],
-                            );
-                          }
-                        },
-                      ),
+                            )
+                          : _records.isEmpty
+                              ? _buildMensajeVacioMovil(fontSizeTabla)
+                              : Column(
+                                  children: [
+                                    _buildTablaRecordsMovil(_records, fontSizeTabla),
+                                    const SizedBox(height: 15),
+                                    _BotonBorrarMovil(onTap: _borrarRecords, size: volverSize),
+                                  ],
+                                ),
                       const SizedBox(height: 8),
                     ],
                   ),
@@ -372,10 +370,7 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () {
-          setState(() => _dificultadSeleccionada = dificultad);
-          _cargarRecords();
-        },
+        onTap: () => _cambiarDificultad(dificultad),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -416,11 +411,11 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
               color: const Color(0xFF6ba8de).withOpacity(0.2),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                const SizedBox(width: 50, child: Text('#', style: TextStyle(fontSize: 12))),
-                const Expanded(child: Text('TIEMPO', style: TextStyle(fontSize: 12))),
-                const Expanded(child: Text('FECHA', style: TextStyle(fontSize: 12))),
+                SizedBox(width: 50, child: Text('#', style: TextStyle(fontSize: 12))),
+                Expanded(child: Text('TIEMPO', style: TextStyle(fontSize: 12))),
+                Expanded(child: Text('FECHA', style: TextStyle(fontSize: 12))),
               ],
             ),
           ),
@@ -495,16 +490,13 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
     );
   }
 
-  // Cell 
+  // Cell
   Widget _buildBotonDificultadMovil(String texto, String dificultad, Color color, double fontSize) {
     final seleccionado = _dificultadSeleccionada == dificultad;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () {
-          setState(() => _dificultadSeleccionada = dificultad);
-          _cargarRecords();
-        },
+        onTap: () => _cambiarDificultad(dificultad),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: EdgeInsets.symmetric(horizontal: fontSize * 1.2, vertical: fontSize * 0.5),
@@ -636,7 +628,6 @@ class _BotonVolverPC extends StatefulWidget {
 
 class _BotonVolverPCState extends State<_BotonVolverPC> {
   bool _hover = false;
-
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
@@ -647,21 +638,11 @@ class _BotonVolverPCState extends State<_BotonVolverPC> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: 50,
-          height: 50,
+          width: 50, height: 50,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.7),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFF6ba8de),
-              width: _hover ? 3 : 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF6ba8de).withOpacity(_hover ? 0.7 : 0.3),
-                blurRadius: _hover ? 15 : 8,
-              ),
-            ],
+            color: Colors.black.withOpacity(0.7), shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFF6ba8de), width: _hover ? 3 : 2),
+            boxShadow: [BoxShadow(color: const Color(0xFF6ba8de).withOpacity(_hover ? 0.7 : 0.3), blurRadius: _hover ? 15 : 8)],
           ),
           child: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
         ),
@@ -681,7 +662,6 @@ class _BotonBorrarPC extends StatefulWidget {
 
 class _BotonBorrarPCState extends State<_BotonBorrarPC> {
   bool _hover = false;
-
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
@@ -692,30 +672,14 @@ class _BotonBorrarPCState extends State<_BotonBorrarPC> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: 180,
-          height: 40,
+          width: 180, height: 40,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: const Color(0xFFfa798a),
-              width: _hover ? 2 : 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFfa798a).withOpacity(_hover ? 0.5 : 0.2),
-                blurRadius: _hover ? 12 : 5,
-              ),
-            ],
+            color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFfa798a), width: _hover ? 2 : 1.5),
+            boxShadow: [BoxShadow(color: const Color(0xFFfa798a).withOpacity(_hover ? 0.5 : 0.2), blurRadius: _hover ? 12 : 5)],
           ),
           child: Center(
-            child: Text(
-              'BORRAR RÉCORDS',
-              style: GoogleFonts.silkscreen(
-                fontSize: 10,
-                color: const Color(0xFFfa798a),
-              ),
-            ),
+            child: Text('BORRAR RÉCORDS', style: GoogleFonts.silkscreen(fontSize: 10, color: const Color(0xFFfa798a))),
           ),
         ),
       ),
@@ -735,11 +699,9 @@ class _BotonVolverMovil extends StatefulWidget {
 
 class _BotonVolverMovilState extends State<_BotonVolverMovil> {
   bool _hover = false;
-
   @override
   Widget build(BuildContext context) {
     double iconSize = widget.size * 0.55;
-    
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -748,29 +710,13 @@ class _BotonVolverMovilState extends State<_BotonVolverMovil> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: widget.size,
-          height: widget.size,
+          width: widget.size, height: widget.size,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.7),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFF6ba8de),
-              width: _hover ? 3 : 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF6ba8de).withOpacity(_hover ? 0.7 : 0.3),
-                blurRadius: _hover ? 15 : 8,
-              ),
-            ],
+            color: Colors.black.withOpacity(0.7), shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFF6ba8de), width: _hover ? 3 : 2),
+            boxShadow: [BoxShadow(color: const Color(0xFF6ba8de).withOpacity(_hover ? 0.7 : 0.3), blurRadius: _hover ? 15 : 8)],
           ),
-          child: Center(
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-              size: iconSize,
-            ),
-          ),
+          child: Center(child: Icon(Icons.arrow_back, color: Colors.white, size: iconSize)),
         ),
       ),
     );
@@ -789,12 +735,10 @@ class _BotonBorrarMovil extends StatefulWidget {
 
 class _BotonBorrarMovilState extends State<_BotonBorrarMovil> {
   bool _hover = false;
-
   @override
   Widget build(BuildContext context) {
     double anchoBoton = widget.size * 3;
     double fontSize = widget.size * 0.25;
-    
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -803,30 +747,14 @@ class _BotonBorrarMovilState extends State<_BotonBorrarMovil> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: anchoBoton.clamp(80, 150),
-          height: widget.size * 0.7,
+          width: anchoBoton.clamp(80, 150), height: widget.size * 0.7,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(
-              color: const Color(0xFFfa798a),
-              width: _hover ? 2 : 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFfa798a).withOpacity(_hover ? 0.5 : 0.2),
-                blurRadius: _hover ? 12 : 5,
-              ),
-            ],
+            color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: const Color(0xFFfa798a), width: _hover ? 2 : 1.5),
+            boxShadow: [BoxShadow(color: const Color(0xFFfa798a).withOpacity(_hover ? 0.5 : 0.2), blurRadius: _hover ? 12 : 5)],
           ),
           child: Center(
-            child: Text(
-              'BORRAR',
-              style: GoogleFonts.silkscreen(
-                fontSize: fontSize.clamp(8, 10),
-                color: const Color(0xFFfa798a),
-              ),
-            ),
+            child: Text('BORRAR', style: GoogleFonts.silkscreen(fontSize: fontSize.clamp(8, 10), color: const Color(0xFFfa798a))),
           ),
         ),
       ),
@@ -839,11 +767,7 @@ class _BotonDialogo extends StatefulWidget {
   final String texto;
   final Color color;
   final VoidCallback onTap;
-  const _BotonDialogo({
-    required this.texto,
-    required this.color,
-    required this.onTap,
-  });
+  const _BotonDialogo({required this.texto, required this.color, required this.onTap});
 
   @override
   State<_BotonDialogo> createState() => _BotonDialogoState();
@@ -851,7 +775,6 @@ class _BotonDialogo extends StatefulWidget {
 
 class _BotonDialogoState extends State<_BotonDialogo> {
   bool _hover = false;
-
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
@@ -864,26 +787,11 @@ class _BotonDialogoState extends State<_BotonDialogo> {
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: widget.color,
-              width: _hover ? 2 : 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: widget.color.withOpacity(_hover ? 0.5 : 0.2),
-                blurRadius: _hover ? 12 : 5,
-              ),
-            ],
+            color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: widget.color, width: _hover ? 2 : 1.5),
+            boxShadow: [BoxShadow(color: widget.color.withOpacity(_hover ? 0.5 : 0.2), blurRadius: _hover ? 12 : 5)],
           ),
-          child: Text(
-            widget.texto,
-            style: GoogleFonts.silkscreen(
-              fontSize: 9,
-              color: widget.color,
-            ),
-          ),
+          child: Text(widget.texto, style: GoogleFonts.silkscreen(fontSize: 9, color: widget.color)),
         ),
       ),
     );

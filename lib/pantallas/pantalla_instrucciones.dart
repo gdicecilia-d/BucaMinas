@@ -1,4 +1,4 @@
-// Reglas del juego
+// Reglas del juego 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -121,7 +121,8 @@ class PantallaInstrucciones extends StatelessWidget {
                         Text(
                           '• Haz clic izquierdo sobre cualquier casilla para ver qué hay debajo.\n'
                           '• Si sale un número, indica cuántas bombas hay en las casillas vecinas (arriba, abajo, lados y diagonal).\n'
-                          '• Si la casilla está vacía, se abrirá automáticamente un área segura.',
+                          '• Si la casilla está vacía, se abrirá automáticamente un área segura.\n'
+                          '• El cronómetro comienza con tu primer clic.',
                           style: GoogleFonts.vt323(
                             fontSize: 14,
                             color: Colors.white70,
@@ -161,8 +162,9 @@ class PantallaInstrucciones extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '• Haz clic derecho sobre una casilla si estás seguro de que hay una bomba.\n'
-                          '• La bandera bloquea la casilla y evita que la pises por error.',
+                          '• Haz clic derecho o mantén pulsado con click izquierdosobre una casilla si estás seguro de que hay una bomba.\n'
+                          '• La bandera bloquea la casilla y evita que la pises por error.\n'
+                          '• El contador de bombas restantes disminuye al colocar banderas.',
                           style: GoogleFonts.vt323(
                             fontSize: 14,
                             color: Colors.white70,
@@ -183,6 +185,29 @@ class PantallaInstrucciones extends StatelessWidget {
                         const SizedBox(height: 8),
                         Text(
                           '• Si haces clic en una casilla donde hay una bomba, el juego termina inmediatamente.',
+                          style: GoogleFonts.vt323(
+                            fontSize: 14,
+                            color: Colors.white70,
+                            height: 1.4,
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 20),
+                        
+                        // 5. Tiempo y Récords 
+                        Text(
+                          '5. ⏱ TIEMPO Y RÉCORDS',
+                          style: GoogleFonts.silkscreen(
+                            fontSize: 14,
+                            color: const Color(0xFF6ba8de),  
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '• El cronómetro se activa con tu primera jugada.\n'
+                          '• Completa el tablero en el menor tiempo posible.\n'
+                          '• Los mejores tiempos se guardan en la sección de MÁXIMAS PUNTUACIONES.\n'
+                          '• ¡Supera tu propio récord y compite contigo mismo!',
                           style: GoogleFonts.vt323(
                             fontSize: 14,
                             color: Colors.white70,
@@ -215,6 +240,7 @@ class PantallaInstrucciones extends StatelessWidget {
                               const SizedBox(height: 8),
                               Text(
                                 'Ganas la partida cuando logras destapar todas las casillas seguras del tablero.\n\n'
+                                'Tu tiempo se registrará en los récords si es uno de los 5 mejores.\n\n'
                                 'No hace falta poner banderas en todas las bombas para ganar, ¡lo importante es no explotar!',
                                 style: GoogleFonts.vt323(
                                   fontSize: 14,

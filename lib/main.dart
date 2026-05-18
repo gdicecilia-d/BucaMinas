@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'pantallas/pantalla_carga.dart';
 import 'pantallas/pantalla_inicio.dart';
 import 'pantallas/pantalla_configuracion.dart';
 import 'pantallas/pantalla_marcadores.dart';
 import 'pantallas/pantalla_instrucciones.dart';
 import 'pantallas/pantalla_creditos.dart';
-import 'pantallas/pantalla_juego.dart';  // ← IMPORTAR
+import 'pantallas/pantalla_juego.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,8 +24,26 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Buscaminas',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
+      theme: ThemeData(
+        brightness: Brightness.light,
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.transparent,
+        cardColor: Colors.white,
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.black87),
+          bodyMedium: TextStyle(color: Colors.black87),
+        ),
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.transparent,
+        cardColor: Colors.black,
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white70),
+        ),
+      ),
       themeMode: temaInicial == 'claro'
           ? ThemeMode.light
           : temaInicial == 'oscuro'

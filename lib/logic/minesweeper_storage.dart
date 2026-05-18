@@ -24,23 +24,19 @@ class MinesweeperStorage {
   static const String _highScoresPrefix = 'high_scores_';
   static const String _numberStyleKey = 'number_style';
 
-  /// Obtiene la instancia de SharedPreferences
   Future<SharedPreferences> _getPrefs() async {
     return await SharedPreferences.getInstance();
   }
 
-  /// Guarda la dificultad por defecto
   Future<void> saveDefaultDifficulty(GameDifficulty difficulty) async {
     try {
       final prefs = await _getPrefs();
       await prefs.setString(_difficultyKey, difficulty.name);
     } catch (e) {
-      // Manejo básico de excepciones
       print('Error al guardar la dificultad por defecto: $e');
     }
   }
 
-  /// Obtiene la dificultad por defecto, retorna 'easy' si no hay una guardada o hay error
   Future<GameDifficulty> getDefaultDifficulty() async {
     try {
       final prefs = await _getPrefs();
@@ -58,7 +54,6 @@ class MinesweeperStorage {
     return GameDifficulty.easy;
   }
 
-  /// Guarda el estilo de los números
   Future<void> saveNumberStyle(NumberStyle style) async {
     try {
       final prefs = await _getPrefs();
@@ -68,7 +63,6 @@ class MinesweeperStorage {
     }
   }
 
-  /// Obtiene el estilo de los números, retorna 'clasico' si no hay uno guardado
   Future<NumberStyle> getNumberStyle() async {
     try {
       final prefs = await _getPrefs();
@@ -86,35 +80,40 @@ class MinesweeperStorage {
     return NumberStyle.clasico;
   }
 
-  /// Guarda un nuevo récord si es lo suficientemente bueno para entrar al Top 5
-  Future<void> saveHighScore(GameDifficulty difficulty, int seconds) async {
+  /// Guarda un nuevo récord. True si es nuevo récord (entró al top 5)
+  Future<bool> saveHighScore(GameDifficulty difficulty, int seconds) async {
     try {
       final prefs = await _getPrefs();
       final key = '$_highScoresPrefix${difficulty.name}';
       
-      // 1. Obtener la lista actual de récords
       List<HighScore> scores = await getHighScores(difficulty);
       
-      // 2. Agregar el nuevo récord
-      scores.add(HighScore(duration: seconds, date: DateTime.now()));
+      // Verifica si es mejor que el peor del top 5
+      if (scores.length >= 5) {
+        scores.sort((a, b) => a.duration.compareTo(b.duration));
+        final worstScore = scores.last.duration;
+        if (seconds >= worstScore && scores.length >= 5) {
+          return false;
+        }
+      }
       
-      // 3. Ordenar de menor a mayor tiempo
+      scores.add(HighScore(duration: seconds, date: DateTime.now()));
       scores.sort((a, b) => a.duration.compareTo(b.duration));
       
-      // 4. Truncar la lista a un máximo de 5 elementos
       if (scores.length > 5) {
         scores = scores.sublist(0, 5);
       }
       
-      // 5. Convertir a String JSON y guardar
       final List<Map<String, dynamic>> jsonList = scores.map((s) => s.toJson()).toList();
       await prefs.setString(key, jsonEncode(jsonList));
+      
+      return true;
     } catch (e) {
       print('Error al guardar el récord: $e');
+      return false;
     }
   }
 
-  /// Retorna la lista ordenada de los 5 mejores tiempos para la dificultad dada
   Future<List<HighScore>> getHighScores(GameDifficulty difficulty) async {
     try {
       final prefs = await _getPrefs();
@@ -124,8 +123,6 @@ class MinesweeperStorage {
       if (scoresString != null) {
         final List<dynamic> decodedList = jsonDecode(scoresString);
         final scores = decodedList.map((json) => HighScore.fromJson(json)).toList();
-        
-        // Aseguramos que retorne ordenado en caso de manipulación externa
         scores.sort((a, b) => a.duration.compareTo(b.duration));
         return scores;
       }
@@ -135,7 +132,6 @@ class MinesweeperStorage {
     return [];
   }
 
-  /// Borra todos los récords guardados
   Future<void> clearAllHighScores() async {
     try {
       final prefs = await _getPrefs();

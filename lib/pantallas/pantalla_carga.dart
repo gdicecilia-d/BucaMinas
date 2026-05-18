@@ -42,7 +42,7 @@ class _PantallaCargaState extends State<PantallaCarga> with TickerProviderStateM
     
     _progressController.forward();
     
-    // Animación CONSTANTE del logo (respira)
+    // Animación del logo 
     _logoAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),

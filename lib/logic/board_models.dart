@@ -48,7 +48,7 @@ enum NumberStyle {
   clasico,
   colorido,
   retro,
-  minimalista,
+  minimalista;
 }
 
 class CellModel {

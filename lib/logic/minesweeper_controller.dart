@@ -1,31 +1,36 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'board_models.dart';
 import 'minesweeper_engine.dart';
 import 'minesweeper_storage.dart';
 
 class MinesweeperController extends ChangeNotifier {
   final MinesweeperEngine _engine = MinesweeperEngine();
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer? _audioPlayer;
   final MinesweeperStorage _storage = MinesweeperStorage();
   
   Timer? _timer;
   int _elapsedTime = 0;
   int _flagsPlaced = 0;
+  int _correctFlags = 0;
+  bool _soundEnabled = true;
 
   NumberStyle _currentNumberStyle = NumberStyle.clasico;
 
-  // Propiedades públicas expuestas a la UI
+  // Propiedades públicas
   List<List<CellModel>> get board => _engine.board;
   GameState get gameState => _engine.gameState;
   int get elapsedTime => _elapsedTime;
-  int get remainingMines => _engine.difficulty.mineCount - _flagsPlaced;
+  int get remainingMines => _engine.difficulty.mineCount - _correctFlags;
+  int get totalMines => _engine.difficulty.mineCount;  
   GameDifficulty get difficulty => _engine.difficulty;
   NumberStyle get currentNumberStyle => _currentNumberStyle;
 
   MinesweeperController() {
     _initStyle();
+    _initAudio();
     startGame(GameDifficulty.easy);
   }
 
@@ -34,7 +39,22 @@ class MinesweeperController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Actualiza el estilo de los números, lo guarda localmente y notifica a la UI
+  void _initAudio() {
+    _audioPlayer = AudioPlayer();
+    _loadSoundSetting();
+  }
+
+  Future<void> _loadSoundSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    _soundEnabled = prefs.getBool('sonido') ?? true;
+  }
+
+  Future<void> setSoundEnabled(bool enabled) async {
+    _soundEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('sonido', enabled);
+  }
+
   Future<void> updateNumberStyle(NumberStyle newStyle) async {
     if (_currentNumberStyle == newStyle) return;
     _currentNumberStyle = newStyle;
@@ -42,20 +62,19 @@ class MinesweeperController extends ChangeNotifier {
     await _storage.saveNumberStyle(newStyle);
   }
 
-  /// Inicia o reinicia el juego con la dificultad seleccionada.
   void startGame(GameDifficulty difficulty) {
     _stopTimer();
     _elapsedTime = 0;
     _flagsPlaced = 0;
+    _correctFlags = 0;
     _engine.generateEmptyBoard(difficulty);
     notifyListeners();
   }
 
-  /// Reproduce un efecto de sonido local sin bloquear la UI
   Future<void> _playSound(String fileName) async {
+    if (!_soundEnabled) return;
     try {
-      // audioplayers busca automáticamente en la carpeta 'assets/' al usar AssetSource
-      await _audioPlayer.play(AssetSource('audios/$fileName'));
+      await _audioPlayer?.play(AssetSource('audios/$fileName'));
     } catch (e) {
       if (kDebugMode) {
         print('Error al reproducir audio: $e');
@@ -63,71 +82,95 @@ class MinesweeperController extends ChangeNotifier {
     }
   }
 
-  /// Maneja el evento de tocar (revelar) una celda.
-  void tapCell(int row, int col) {
-    // Si el juego ya terminó, no hacemos nada.
+  Future<void> tapCell(int row, int col) async {
+    // Si el juego ya terminó, no hacer nada
     if (gameState == GameState.won || gameState == GameState.lost) return;
 
     final wasIdle = gameState == GameState.idle;
     final wasRevealed = board[row][col].isRevealed;
 
-    // Llama al motor lógico para procesar la jugada.
     _engine.revealCell(row, col);
 
-    // Si era el primer tap y ahora estamos jugando, iniciamos el cronómetro.
     if (wasIdle && gameState == GameState.playing) {
       _startTimer();
     }
     
-    // Evaluar sonidos según el cambio de estado de la partida
     if (gameState == GameState.won) {
+      _stopTimer();  // detener cronómetro al ganar
       _playSound('victory.wav');
-      // Guardar el récord automáticamente de forma asíncrona
-      _storage.saveHighScore(difficulty, _elapsedTime);
+      final esNuevoRecord = await _storage.saveHighScore(difficulty, _elapsedTime);
+      notifyListeners();
+      _onGameWon?.call(_elapsedTime, esNuevoRecord);
     } else if (gameState == GameState.lost) {
+      _stopTimer();  // detener cronómetro al perder
       _playSound('defeat.wav');
+      _onGameLost?.call();
     } else if (!wasRevealed && board[row][col].isRevealed) {
-      // Si el juego sigue jugando y la celda fue efectivamente revelada
       _playSound('reveal.wav');
     }
 
-    _checkGameStateChanges();
     notifyListeners();
   }
 
-  /// Maneja el evento de colocar o quitar una bandera.
+  Function(int tiempo, bool esNuevoRecord)? _onGameWon;
+  Function()? _onGameLost;
+
+  void setOnGameWon(Function(int, bool) callback) {
+    _onGameWon = callback;
+  }
+
+  void setOnGameLost(Function() callback) {
+    _onGameLost = callback;
+  }
+
+  /// Poner/quitar bandera con límite 
   void flagCell(int row, int col) {
-    // Solo permitimos banderas si el juego está activo (playing).
+    // Si el juego ya terminó, no hacer nada
     if (gameState != GameState.playing) return;
 
     final cell = board[row][col];
     
-    // Solo podemos interactuar con celdas no reveladas.
     if (!cell.isRevealed) {
       final wasFlagged = cell.isFlagged;
+      final tieneMina = cell.hasMine;
+      
+      // Si intenta poner una bandera y ya llegó al límite de minas, no permitir
+      if (!wasFlagged && _flagsPlaced >= totalMines) {
+        // No se puede poner más banderas que minas totales
+        return;
+      }
       
       _engine.toggleFlag(row, col);
       
       final isNowFlagged = board[row][col].isFlagged;
       
-      // Si el estado de la bandera cambió, actualizamos el contador.
       if (wasFlagged != isNowFlagged) {
         if (isNowFlagged) {
           _flagsPlaced++;
+          if (tieneMina) {
+            _correctFlags++;
+          }
+          _playSound('flag.wav');
         } else {
           _flagsPlaced--;
+          if (tieneMina) {
+            _correctFlags--;
+          }
+          _playSound('flag.wav');
         }
+        notifyListeners();
       }
-      
-      notifyListeners();
     }
   }
 
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _elapsedTime++;
-      notifyListeners(); // Notificamos cada segundo para actualizar la UI.
+      // Solo incrementar si el juego está activo
+      if (gameState == GameState.playing) {
+        _elapsedTime++;
+        notifyListeners();
+      }
     });
   }
 
@@ -136,14 +179,6 @@ class MinesweeperController extends ChangeNotifier {
     _timer = null;
   }
 
-  /// Verifica si el juego ha terminado para detener el cronómetro.
-  void _checkGameStateChanges() {
-    if (gameState == GameState.won || gameState == GameState.lost) {
-      _stopTimer();
-    }
-  }
-
-  /// Retorna la lista de los mejores tiempos guardados
   Future<List<HighScore>> loadHighScores(GameDifficulty difficulty) {
     return _storage.getHighScores(difficulty);
   }
@@ -151,7 +186,7 @@ class MinesweeperController extends ChangeNotifier {
   @override
   void dispose() {
     _stopTimer();
-    _audioPlayer.dispose();
+    _audioPlayer?.dispose();
     super.dispose();
   }
 }

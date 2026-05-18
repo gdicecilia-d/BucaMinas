@@ -22,7 +22,7 @@ class PantallaCreditos extends StatelessWidget {
     double volverSize;
     
     if (esHorizontal && esMovil) {
-      // Horizontal en móvil
+      // Horizontal en cell
       anchoCuadro = screenSize.width * 0.85;
       paddingCuadro = 20;
       tituloSize = 22;
@@ -31,7 +31,7 @@ class PantallaCreditos extends StatelessWidget {
       nombreSize = 11;
       volverSize = 40;
     } else if (esMovil) {
-      // Vertical en móvil
+      // Vertical en cell
       anchoCuadro = screenSize.width * 0.85;
       paddingCuadro = 25;
       tituloSize = 24;
