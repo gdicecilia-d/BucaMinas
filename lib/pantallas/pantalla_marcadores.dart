@@ -1,7 +1,8 @@
 // Tabla High Scores 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../logic/board_models.dart';
+import '../logic/minesweeper_storage.dart';
 
 class PantallaMarcadores extends StatefulWidget {
   const PantallaMarcadores({super.key});
@@ -12,17 +13,8 @@ class PantallaMarcadores extends StatefulWidget {
 
 class _PantallaMarcadoresState extends State<PantallaMarcadores> {
   String _dificultadSeleccionada = 'facil';
-  Map<String, List<Map<String, dynamic>>> _records = {
-    'facil': [],
-    'medio': [],
-    'dificil': [],
-  };
-
-  final Map<String, String> _dificultadNombre = {
-    'facil': 'FÁCIL (6x6)',
-    'medio': 'MEDIO (8x8)',
-    'dificil': 'DIFÍCIL (10x10)',
-  };
+  final MinesweeperStorage _storage = MinesweeperStorage();
+  late Future<List<HighScore>> _recordsFuture;
 
   final Map<String, Color> _dificultadColor = {
     'facil': const Color(0xFF6ba8de),
@@ -35,19 +27,17 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
     super.initState();
     _cargarRecords();
   }
+  
+  GameDifficulty _getDifficultyEnum() {
+    if (_dificultadSeleccionada == 'medio') return GameDifficulty.medium;
+    if (_dificultadSeleccionada == 'dificil') return GameDifficulty.hard;
+    return GameDifficulty.easy;
+  }
 
-  Future<void> _cargarRecords() async {
-    final prefs = await SharedPreferences.getInstance();
-    
-    for (var dificultad in ['facil', 'medio', 'dificil']) {
-      final String? recordsJson = prefs.getString('records_$dificultad');
-      if (recordsJson != null) {
-        _records[dificultad] = [];
-      } else {
-        _records[dificultad] = [];
-      }
-    }
-    setState(() {});
+  void _cargarRecords() {
+    setState(() {
+      _recordsFuture = _storage.getHighScores(_getDifficultyEnum());
+    });
   }
 
   Future<void> _borrarRecords() async {
@@ -132,17 +122,8 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
   }
 
   void _confirmarBorrado() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('records_facil');
-    await prefs.remove('records_medio');
-    await prefs.remove('records_dificil');
-    
-    _records = {
-      'facil': [],
-      'medio': [],
-      'dificil': [],
-    };
-    setState(() {});
+    await _storage.clearAllHighScores();
+    _cargarRecords();
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -163,7 +144,6 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
     final screenSize = MediaQuery.of(context).size;
     final orientation = MediaQuery.of(context).orientation;
     final bool esMovil = screenSize.width < 600;
-    final recordsActuales = _records[_dificultadSeleccionada] ?? [];
     
     // PC / Tablet 
     if (!esMovil) {
@@ -230,12 +210,27 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
                           ],
                         ),
                         const SizedBox(height: 25),
-                        recordsActuales.isEmpty
-                            ? _buildMensajeVacioPC()
-                            : _buildTablaRecordsPC(recordsActuales),
-                        const SizedBox(height: 25),
-                        if (recordsActuales.isNotEmpty)
-                          _BotonBorrarPC(onTap: _borrarRecords),
+                        FutureBuilder<List<HighScore>>(
+                          future: _recordsFuture,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Padding(
+                                padding: EdgeInsets.all(20),
+                                child: CircularProgressIndicator(color: Color(0xFF6ba8de)),
+                              );
+                            } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                              return _buildMensajeVacioPC();
+                            } else {
+                              return Column(
+                                children: [
+                                  _buildTablaRecordsPC(snapshot.data!),
+                                  const SizedBox(height: 25),
+                                  _BotonBorrarPC(onTap: _borrarRecords),
+                                ],
+                              );
+                            }
+                          },
+                        ),
                         const SizedBox(height: 10),
                       ],
                     ),
@@ -338,12 +333,27 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
                         ],
                       ),
                       const SizedBox(height: 15),
-                      recordsActuales.isEmpty
-                          ? _buildMensajeVacioMovil(fontSizeTabla)
-                          : _buildTablaRecordsMovil(recordsActuales, fontSizeTabla),
-                      const SizedBox(height: 15),
-                      if (recordsActuales.isNotEmpty)
-                        _BotonBorrarMovil(onTap: _borrarRecords, size: volverSize),
+                      FutureBuilder<List<HighScore>>(
+                        future: _recordsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Padding(
+                              padding: EdgeInsets.all(20),
+                              child: CircularProgressIndicator(color: Color(0xFF6ba8de)),
+                            );
+                          } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                            return _buildMensajeVacioMovil(fontSizeTabla);
+                          } else {
+                            return Column(
+                              children: [
+                                _buildTablaRecordsMovil(snapshot.data!, fontSizeTabla),
+                                const SizedBox(height: 15),
+                                _BotonBorrarMovil(onTap: _borrarRecords, size: volverSize),
+                              ],
+                            );
+                          }
+                        },
+                      ),
                       const SizedBox(height: 8),
                     ],
                   ),
@@ -362,7 +372,10 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () => setState(() => _dificultadSeleccionada = dificultad),
+        onTap: () {
+          setState(() => _dificultadSeleccionada = dificultad);
+          _cargarRecords();
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -386,7 +399,7 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
     );
   }
 
-  Widget _buildTablaRecordsPC(List<Map<String, dynamic>> records) {
+  Widget _buildTablaRecordsPC(List<HighScore> records) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
@@ -406,14 +419,16 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
             child: Row(
               children: [
                 const SizedBox(width: 50, child: Text('#', style: TextStyle(fontSize: 12))),
-                const Expanded(child: Text('INTENTOS', style: TextStyle(fontSize: 12))),
+                const Expanded(child: Text('TIEMPO', style: TextStyle(fontSize: 12))),
                 const Expanded(child: Text('FECHA', style: TextStyle(fontSize: 12))),
               ],
             ),
           ),
           ...List.generate(records.length, (index) {
             final record = records[index];
-            final medalla = record['medalla'];
+            final medalla = index == 0 ? 'oro' : (index == 1 ? 'plata' : (index == 2 ? 'bronce' : 'none'));
+            final fechaStr = '${record.date.day.toString().padLeft(2, '0')}/${record.date.month.toString().padLeft(2, '0')}/${record.date.year}';
+            
             return Container(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
               decoration: BoxDecoration(
@@ -436,13 +451,13 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
                   ),
                   Expanded(
                     child: Text(
-                      '${record['intentos']}',
+                      '${record.duration}s',
                       style: GoogleFonts.vt323(fontSize: 16, color: Colors.white),
                     ),
                   ),
                   Expanded(
                     child: Text(
-                      record['fecha'],
+                      fechaStr,
                       style: GoogleFonts.vt323(fontSize: 14, color: Colors.white54),
                     ),
                   ),
@@ -486,7 +501,10 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () => setState(() => _dificultadSeleccionada = dificultad),
+        onTap: () {
+          setState(() => _dificultadSeleccionada = dificultad);
+          _cargarRecords();
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: EdgeInsets.symmetric(horizontal: fontSize * 1.2, vertical: fontSize * 0.5),
@@ -510,7 +528,7 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
     );
   }
 
-  Widget _buildTablaRecordsMovil(List<Map<String, dynamic>> records, double fontSize) {
+  Widget _buildTablaRecordsMovil(List<HighScore> records, double fontSize) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
@@ -530,14 +548,16 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
             child: Row(
               children: [
                 SizedBox(width: 30, child: Text('#', style: TextStyle(fontSize: fontSize * 0.8))),
-                Expanded(child: Text('INTENTOS', style: TextStyle(fontSize: fontSize * 0.8))),
+                Expanded(child: Text('TIEMPO', style: TextStyle(fontSize: fontSize * 0.8))),
                 Expanded(child: Text('FECHA', style: TextStyle(fontSize: fontSize * 0.8))),
               ],
             ),
           ),
           ...List.generate(records.length, (index) {
             final record = records[index];
-            final medalla = record['medalla'];
+            final medalla = index == 0 ? 'oro' : (index == 1 ? 'plata' : (index == 2 ? 'bronce' : 'none'));
+            final fechaStr = '${record.date.day.toString().padLeft(2, '0')}/${record.date.month.toString().padLeft(2, '0')}/${record.date.year}';
+            
             return Container(
               padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
               decoration: BoxDecoration(
@@ -560,13 +580,13 @@ class _PantallaMarcadoresState extends State<PantallaMarcadores> {
                   ),
                   Expanded(
                     child: Text(
-                      '${record['intentos']}',
+                      '${record.duration}s',
                       style: GoogleFonts.vt323(fontSize: fontSize, color: Colors.white),
                     ),
                   ),
                   Expanded(
                     child: Text(
-                      record['fecha'],
+                      fechaStr,
                       style: GoogleFonts.vt323(fontSize: fontSize * 0.85, color: Colors.white54),
                     ),
                   ),

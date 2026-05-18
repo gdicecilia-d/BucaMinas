@@ -44,6 +44,13 @@ enum GameState {
   lost,
 }
 
+enum NumberStyle {
+  clasico,
+  colorido,
+  retro,
+  minimalista,
+}
+
 class CellModel {
   final int row;
   final int col;

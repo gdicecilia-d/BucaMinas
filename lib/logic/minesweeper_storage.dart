@@ -22,6 +22,7 @@ class HighScore {
 class MinesweeperStorage {
   static const String _difficultyKey = 'default_difficulty';
   static const String _highScoresPrefix = 'high_scores_';
+  static const String _numberStyleKey = 'number_style';
 
   /// Obtiene la instancia de SharedPreferences
   Future<SharedPreferences> _getPrefs() async {
@@ -55,6 +56,34 @@ class MinesweeperStorage {
       print('Error al obtener la dificultad por defecto: $e');
     }
     return GameDifficulty.easy;
+  }
+
+  /// Guarda el estilo de los números
+  Future<void> saveNumberStyle(NumberStyle style) async {
+    try {
+      final prefs = await _getPrefs();
+      await prefs.setString(_numberStyleKey, style.name);
+    } catch (e) {
+      print('Error al guardar el estilo de números: $e');
+    }
+  }
+
+  /// Obtiene el estilo de los números, retorna 'clasico' si no hay uno guardado
+  Future<NumberStyle> getNumberStyle() async {
+    try {
+      final prefs = await _getPrefs();
+      final styleName = prefs.getString(_numberStyleKey);
+      
+      if (styleName != null) {
+        return NumberStyle.values.firstWhere(
+          (s) => s.name == styleName,
+          orElse: () => NumberStyle.clasico,
+        );
+      }
+    } catch (e) {
+      print('Error al obtener el estilo de números: $e');
+    }
+    return NumberStyle.clasico;
   }
 
   /// Guarda un nuevo récord si es lo suficientemente bueno para entrar al Top 5
@@ -104,5 +133,17 @@ class MinesweeperStorage {
       print('Error al obtener los récords: $e');
     }
     return [];
+  }
+
+  /// Borra todos los récords guardados
+  Future<void> clearAllHighScores() async {
+    try {
+      final prefs = await _getPrefs();
+      for (var d in GameDifficulty.values) {
+        await prefs.remove('$_highScoresPrefix${d.name}');
+      }
+    } catch (e) {
+      print('Error al borrar los récords: $e');
+    }
   }
 }
